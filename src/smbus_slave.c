@@ -19,6 +19,7 @@ typedef struct smbus_slave_t
 {
     bool is_quick_abort;
     bool is_cmd_read;
+    bool is_restarted;
 
     quick_handler_t quick_handler;
     byte_handler_t read_byte_handler;
@@ -47,11 +48,16 @@ static void __isr __not_in_flash_func(smbus_slave_irq_handler)(void);
 
 void smbus_slave_irq_restart(smbus_slave_t* slave)
 {
-    SMBUS_CALLBACK(slave->read_data_handler, slave->cmd_byte, &slave->smbus_data);
+    slave->is_restarted = true;
 }
 
 void smbus_slave_irq_start(smbus_slave_t* slave)
-{}
+{
+    if(slave->is_restarted)
+    {
+        SMBUS_CALLBACK(slave->read_data_handler, slave->cmd_byte, &slave->smbus_data);
+    }
+}
 
 void smbus_slave_irq_tx_abrt(smbus_slave_t* slave, uint32_t abrt_source)
 {
@@ -90,7 +96,10 @@ void smbus_slave_irq_stop(smbus_slave_t* slave)
         }
     }  
 
-    slave->is_quick_abort = false;  
+    slave->is_quick_abort = false;
+    slave->is_cmd_read = false;
+    slave->is_restarted = false;
+
     slave->io_next_byte = 0;
     slave->cmd_byte = 0x00;
     memset(&slave->smbus_data, 0, sizeof(smbus_data_t));
