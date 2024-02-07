@@ -1,1 +1,1 @@
-# PicoW DHT11 Driver
+# PicoW SMBus
