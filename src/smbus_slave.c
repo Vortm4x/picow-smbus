@@ -32,6 +32,7 @@ typedef struct smbus_slave_t
     byte_handler_t write_byte_handler;
     data_handler_t read_data_handler;
     data_handler_t write_data_handler;
+    proc_call_handler_t proc_call_handler;
 
     uint scl_pin;
     uint sda_pin;
@@ -69,7 +70,21 @@ void smbus_slave_irq_start(smbus_slave_t* slave)
 
     if(slave->is_restarted)
     {
-        SMBUS_CALLBACK(slave->read_data_handler, slave->cmd_byte, &slave->smbus_data);
+        if(slave->io_next_byte == 0)
+        {
+            SMBUS_CALLBACK(slave->read_data_handler, slave->cmd_byte, &slave->smbus_data);
+        }
+        else
+        if(slave->io_next_byte == 2)
+        {
+            uint16_t request = slave->smbus_data.word;
+            uint16_t response = 0;
+
+            SMBUS_CALLBACK(slave->proc_call_handler, slave->cmd_byte, &request, &response);
+            
+            slave->smbus_data.word = response;
+            slave->io_next_byte = 0;
+        }
     }
 }
 
@@ -329,6 +344,14 @@ void smbus_set_write_data_handler(i2c_inst_t* i2c, data_handler_t data_handler)
     slave->write_data_handler = data_handler;
 }
 
+void smbus_set_proc_call_handler(i2c_inst_t* i2c, proc_call_handler_t proc_call_handler)
+{
+    uint i2c_index = i2c_hw_index(i2c);
+    smbus_slave_t* slave = &smbus_slaves[i2c_index];
+
+    slave->proc_call_handler = proc_call_handler;
+}
+
 void smbus_reset_handler(i2c_inst_t* i2c, smbus_slave_event_t slave_event)
 {
     uint i2c_index = i2c_hw_index(i2c);
@@ -350,6 +373,9 @@ void smbus_reset_handler(i2c_inst_t* i2c, smbus_slave_event_t slave_event)
             break;
         case SMBUS_SLAVE_WRITE_DATA:
             slave->write_data_handler = NULL;
+            break;
+        case SMBUS_SLAVE_PROC_CALL:
+            slave->proc_call_handler = NULL;
             break;
     }
 }

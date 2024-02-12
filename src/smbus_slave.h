@@ -16,6 +16,7 @@ typedef enum smbus_slave_event_t
     SMBUS_SLAVE_WRITE_BYTE,
     SMBUS_SLAVE_READ_DATA,
     SMBUS_SLAVE_WRITE_DATA,
+    SMBUS_SLAVE_PROC_CALL,
 }
 smbus_slave_event_t;
 
@@ -31,6 +32,8 @@ smbus_data_t;
 typedef void (*data_handler_t)(uint8_t command, smbus_data_t* smbus_data);
 typedef void (*byte_handler_t)(uint8_t* byte);
 typedef void (*quick_handler_t)(bool value);
+typedef void (*proc_call_handler_t)(uint8_t command, uint16_t* request, uint16_t* response);
+
 
 void smbus_slave_init(
     i2c_inst_t* i2c, 
@@ -49,6 +52,7 @@ void smbus_set_read_byte_handler(i2c_inst_t* i2c, byte_handler_t byte_handler);
 void smbus_set_write_byte_handler(i2c_inst_t* i2c, byte_handler_t byte_handler);
 void smbus_set_read_data_handler(i2c_inst_t* i2c, data_handler_t data_handler);
 void smbus_set_write_data_handler(i2c_inst_t* i2c, data_handler_t data_handler);
+void smbus_set_proc_call_handler(i2c_inst_t* i2c, proc_call_handler_t proc_call_handler);
 
 void smbus_reset_handler(i2c_inst_t* i2c, smbus_slave_event_t slave_event);
 

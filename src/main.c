@@ -27,6 +27,7 @@ static void read_byte_handler(uint8_t* byte);
 static void write_byte_handler(uint8_t* byte);
 static void read_data_handler(uint8_t command, smbus_data_t* smbus_data);
 static void write_data_handler(uint8_t command, smbus_data_t* smbus_data);
+static void proc_call_handler(uint8_t command, uint16_t* request, uint16_t* response);
 
 static void pico_smbus_slave_init();
 static bool init_all();
@@ -129,6 +130,12 @@ void write_data_handler(uint8_t command, smbus_data_t* smbus_data)
     }   
 }
 
+void proc_call_handler(uint8_t command, uint16_t* request, uint16_t* response)
+{
+    *response = 0x8246;
+    PICO_PRINT("[RROC] command: 0x%02X, req: 0x%04X, resp: 0x%04X\n", command, *request, *response);
+}
+
 
 void pico_smbus_slave_init()
 {
@@ -145,6 +152,7 @@ void pico_smbus_slave_init()
     smbus_set_write_byte_handler(PICO_SMBUS_SLAVE_I2C_INSTANCE, write_byte_handler);
     smbus_set_read_data_handler(PICO_SMBUS_SLAVE_I2C_INSTANCE, read_data_handler);
     smbus_set_write_data_handler(PICO_SMBUS_SLAVE_I2C_INSTANCE, write_data_handler);
+    smbus_set_proc_call_handler(PICO_SMBUS_SLAVE_I2C_INSTANCE, proc_call_handler);
 }
 
 
