@@ -1,4 +1,5 @@
-add_library(LWIP_PORT INTERFACE)
-target_include_directories(LWIP_PORT INTERFACE
-   ${CMAKE_CURRENT_LIST_DIR}/configs/lwip
+add_library(lwip_port INTERFACE)
+
+target_include_directories(lwip_port INTERFACE
+   ${PROJECT_ROOT}/include/configs/lwip
 )

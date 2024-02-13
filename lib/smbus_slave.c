@@ -1,10 +1,7 @@
-#include "smbus_slave.h"
-
+#include <smbus_slave.h>
 #include <hardware/irq.h>
 #include <hardware/gpio.h> 
 #include <string.h>
-
-#include <stdio.h>  //debug only
 
 
 #define SMBUS_MIN_BAUD_RATE_HZ _u(10000)
@@ -15,14 +12,6 @@
     {                                   \
         callback(__VA_ARGS__);          \
     }
-
-#define SMBUS_DBG
-
-#ifdef SMBUS_DBG
-    #define SMBUS_DBG_PUTCHAR(x) putchar(x)
-#else
-    #define SMBUS_DBG_PUTCHAR(x)
-#endif
 
 
 typedef struct smbus_slave_t
@@ -60,14 +49,11 @@ static void smbus_init_i2c_gpio(uint gpio);
 
 void smbus_slave_irq_restart(smbus_slave_t* slave)
 {
-    SMBUS_DBG_PUTCHAR('R');
     slave->is_restarted = true;
 }
 
 void smbus_slave_irq_start(smbus_slave_t* slave)
 {
-    SMBUS_DBG_PUTCHAR('S');
-
     if(slave->is_restarted)
     {
         if(slave->io_next_byte == 0)
@@ -81,7 +67,7 @@ void smbus_slave_irq_start(smbus_slave_t* slave)
             uint16_t response = 0;
 
             SMBUS_CALLBACK(slave->proc_call_handler, slave->cmd_byte, &request, &response);
-            
+
             slave->smbus_data.word = response;
             slave->io_next_byte = 0;
         }
@@ -89,24 +75,13 @@ void smbus_slave_irq_start(smbus_slave_t* slave)
 }
 
 void smbus_slave_irq_tx_abrt(smbus_slave_t* slave, uint32_t abrt_source)
-{
-    SMBUS_DBG_PUTCHAR('A');
-}
+{}
 
 void smbus_slave_irq_stop(smbus_slave_t* slave)
 {
     if(!slave->is_cmd_read)
     {
         SMBUS_CALLBACK(slave->quick_handler, slave->is_quick_on);
-
-        if(slave->is_quick_on)
-        {
-            SMBUS_DBG_PUTCHAR('+');
-        }
-        else
-        {
-            SMBUS_DBG_PUTCHAR('-');
-        }
     }
     else
     {
@@ -126,15 +101,10 @@ void smbus_slave_irq_stop(smbus_slave_t* slave)
     slave->io_next_byte = 0;
     slave->cmd_byte = 0x00;
     memset(&slave->smbus_data, 0, sizeof(smbus_data_t));
-
-    SMBUS_DBG_PUTCHAR('P');
-    SMBUS_DBG_PUTCHAR('\n');
 }
 
 void smbus_slave_irq_rx_full(smbus_slave_t* slave, i2c_inst_t* i2c)
 {
-    SMBUS_DBG_PUTCHAR('w');
-
     if(slave->is_cmd_read)
     {
         slave->smbus_data.block[slave->io_next_byte] = i2c_read_byte_raw(i2c);
@@ -151,8 +121,6 @@ void smbus_slave_irq_rd_req(smbus_slave_t* slave, i2c_inst_t* i2c)
 {
     if(slave->is_cmd_read)
     {
-        SMBUS_DBG_PUTCHAR('r');
-
         i2c_write_byte_raw(i2c, slave->smbus_data.block[slave->io_next_byte]);
         slave->io_next_byte += 1;
     }
@@ -160,8 +128,6 @@ void smbus_slave_irq_rd_req(smbus_slave_t* slave, i2c_inst_t* i2c)
     {
         if(gpio_get(slave->sda_pin))
         {
-            SMBUS_DBG_PUTCHAR('r');
-            
             SMBUS_CALLBACK(slave->read_byte_handler, &slave->cmd_byte);
             slave->is_cmd_read = true;
         }

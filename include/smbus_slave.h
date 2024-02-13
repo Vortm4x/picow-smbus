@@ -25,7 +25,7 @@ typedef union
 {
     uint8_t byte;
     uint16_t word;
-    uint8_t block[SMBUS_MAX_BLOCK_LEN];
+    uint8_t block[SMBUS_MAX_BLOCK_LEN + 1];
 }
 smbus_data_t;
 

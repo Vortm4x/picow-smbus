@@ -3,16 +3,14 @@
 #include <ctype.h>
 #include <pico/stdlib.h>
 #include <pico/cyw43_arch.h>
-#include <hardware/gpio.h>
 #include <hardware/i2c.h>
-
-#include <pico/i2c_slave.h>
-#include "smbus_slave.h"
+#include <smbus_slave.h>
+#include "commands.h"
 
 
 #define PICO_SMBUS_SLAVE_I2C_INSTANCE    i2c0
 #define PICO_SMBUS_SLAVE_I2C_ADDRESS     0x17
-#define PICO_SMBUS_SLAVE_BAUDRATE        50000
+#define PICO_SMBUS_SLAVE_BAUDRATE        100000
 #define PICO_SMBUS_SLAVE_SMDAT_PIN       12
 #define PICO_SMBUS_SLAVE_SMCLK_PIN       13
 
@@ -87,11 +85,30 @@ void read_data_handler(uint8_t command, smbus_data_t* smbus_data)
         {
             PICO_PRINT("[TX] block data:");
 
+            #define SMBUS_FUNC_BLOCK
+
+            
+            #ifdef SMBUS_FUNC_BLOCK
+
+            smbus_data->block[0] = 32;
+
+            for(int i = 0; i < smbus_data->block[0]; ++i)
+            {
+                smbus_data->block[i + 1] = (uint8_t)i;
+                PICO_PRINT(" 0x%02X", smbus_data->block[i]);
+            }
+
+
+            #else
+
             for(int i = 0; i < SMBUS_MAX_BLOCK_LEN; ++i)
             {
                 smbus_data->block[i] = i;
                 PICO_PRINT(" 0x%02X", smbus_data->block[i]);
             }
+
+            #endif
+
 
             PICO_PRINT("\n");
         }
