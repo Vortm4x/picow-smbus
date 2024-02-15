@@ -22,6 +22,9 @@
     "cortex-debug.variableUseNaturalFormat": false,
     "cmake.configureOnOpen": true,
     "files.associations": {
-        "i2c.h": "c"
+        "i2c.h": "c",
+        "stdio.h": "c",
+        "stddef.h": "c",
+        "handlers.h": "c"
     }
 }

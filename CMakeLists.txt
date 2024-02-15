@@ -19,6 +19,7 @@ pico_sdk_init()
 # Library
 add_library(${PROJECT_LIB}
     lib/smbus_slave.c
+    lib/smbus_pec.c
 )
 target_link_libraries(${PROJECT_LIB} PRIVATE
     hardware_i2c
@@ -28,11 +29,17 @@ target_include_directories(${PROJECT_LIB} PRIVATE
 )
 target_compile_options(${PROJECT_LIB} PRIVATE -Wall)
 
+target_include_directories(${PROJECT_LIB} PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_ROOT}/include>
+    $<INSTALL_INTERFACE:${PROJECT_ROOT}include/smbus>
+)
+
 
 # Firmware
 add_executable(${PROJECT_FIRMWARE}
     firmware/main.c
     firmware/commands.h
+    firmware/handlers.h firmware/handlers.c
 )
 target_link_libraries(${PROJECT_FIRMWARE} PRIVATE
     pico_stdlib
@@ -42,7 +49,7 @@ target_link_libraries(${PROJECT_FIRMWARE} PRIVATE
     ${PROJECT_LIB}
 )
 target_include_directories(${PROJECT_FIRMWARE} PRIVATE
-    "${PROJECT_ROOT}/include"
+    $<BUILD_INTERFACE:${PROJECT_ROOT}/smbus>
 )
 target_compile_options(${PROJECT_FIRMWARE} PRIVATE -Wall)
 
